@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, SyntheticEvent } from "react";
 import {
   Item,
   Button,
@@ -10,9 +10,11 @@ import { IActivity } from "../../../app/models/activity";
 interface IProp {
   activities: IActivity[];
   selectActivity:(id:string)=>void;
-  deleteActivity:(id:string)=>void;
+  deleteActivity:(e:SyntheticEvent<HTMLButtonElement>,id:string)=>void;
+  submitting:boolean;
+  target:string
  }
-export const ActivityList: FC<IProp> = ({ activities, selectActivity, deleteActivity }) => {
+export const ActivityList: FC<IProp> = ({ activities, selectActivity, deleteActivity,submitting, target}) => {
   return (
     <div>
       <Segment clearing>
@@ -29,8 +31,17 @@ export const ActivityList: FC<IProp> = ({ activities, selectActivity, deleteActi
                   </div>
                 </Item.Description>
                 <Item.Extra>
-                  <Button onClick={()=>selectActivity(activity.id)} floated="right" content="View" color="blue" />
-                  <Button onClick={()=>deleteActivity(activity.id)} floated="right" content="delete" color="red" />
+                  <Button
+                  
+                   onClick={()=>selectActivity(activity.id)} 
+                   floated="right" content="View" 
+                   color="blue" 
+                   />
+                  <Button
+                  name = {activity.id}
+                   loading = {target === activity.id && submitting} onClick={(e)=>deleteActivity(e, activity.id)} 
+                   floated="right" content="delete" 
+                   color="red" />
                   <Label basic content={activity.category}/>
                 </Item.Extra>
               </Item.Content>
