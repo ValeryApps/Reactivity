@@ -1,110 +1,128 @@
-import React, { FC, useState, FormEvent } from "react";
-import { Form, Segment, Header, Button } from "semantic-ui-react";
+import React, { useState, FormEvent, useContext, useEffect } from "react";
+import { Segment, Form, Button } from "semantic-ui-react";
 import { IActivity } from "../../../app/models/activity";
-import {v4 as uuid} from 'uuid';
+import { v4 as uuid } from "uuid";
+import ActivityStore from "../../../app/stores/activityStore";
+import { observer } from "mobx-react-lite";
+import { RouteComponentProps } from "react-router-dom";
 
-interface IProp {
-  setEditMode: (editMode: boolean) => void;
-  activity: IActivity;
-  createActivity:(activity:IActivity) =>void;
-  editActivity:(activity:IActivity)=>void;
-  submitting:boolean;
-  
+interface DetailsParams {
+  id: string;
 }
-export const ActivityForm: FC<IProp> = ({
-  setEditMode,
-  activity: initialState,
-  createActivity,
-  editActivity,
-  submitting,
- 
+
+const ActivityForm: React.FC<RouteComponentProps<DetailsParams>> = ({
+  match,
+  history
 }) => {
-  const initializeForm = () => {
-    if (initialState) {
-      return initialState;
-    } else {
-      return {
-        id: "",
-        title: "",
-        description: "",
-        category: "",
-        date: "",
-        city: "",
-        venue: "",
+  const activityStore = useContext(ActivityStore);
+  const {
+    createActivity,
+    editActivity,
+    submitting,
+    activity: initialFormState,
+    loadActivity,
+    clearActivity
+  } = activityStore;
+
+
+  
+
+  const [activity, setActivity] = useState<IActivity>({
+    id: "",
+    title: "",
+    category: "",
+    description: "",
+    date: "",
+    city: "",
+    venue: "",
+  });
+
+
+  useEffect(()=>{
+    if(match.params.id && activity.id.length === 0){
+      loadActivity(match.params.id).then(()=>initialFormState && setActivity(initialFormState))
+    }
+    return () =>{
+      clearActivity()
+    }
+  },[loadActivity, clearActivity, initialFormState, match.params.id, activity.id.length])
+
+  const handleSubmit = () => {
+    if (activity.id.length === 0) {
+      let newActivity = {
+        ...activity,
+        id: uuid(),
       };
+      createActivity(newActivity).then(()=>history.push(`/activities/${newActivity.id}`));
+    } else {
+      editActivity(activity).then(()=>history.push(`/activities/${activity.id}`));
     }
   };
-  const [activity, setActity] = useState<IActivity>(initializeForm);
 
   const handleInputChange = (
     event: FormEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = event.currentTarget;
-    setActity({ ...activity, [name]: value });
+    setActivity({ ...activity, [name]: value });
   };
-  const submiForm = () => {
-   
-    if(activity.id.length === 0){
-      let newActivity = {
-        ...activity,
-        id: uuid()
-      };
-      createActivity(newActivity)
-    }
-    else{
-      editActivity(activity)
-    }
-  };
+
   return (
     <Segment clearing>
-      <Header textAlign="center">Edit form</Header>
-      <Form onSubmit={submiForm}>
+      <Form onSubmit={handleSubmit}>
         <Form.Input
-          placeholder="Title"
-          value={activity?.title}
           onChange={handleInputChange}
           name="title"
+          placeholder="Title"
+          value={activity.title}
         />
         <Form.TextArea
-          rows={4}
-          placeholder="Description"
-          value={activity?.description}
           onChange={handleInputChange}
           name="description"
+          rows={2}
+          placeholder="Description"
+          value={activity.description}
         />
         <Form.Input
-          type="datetime-local"
-          placeholder="Date"
-          value={activity?.date}
-          onChange={handleInputChange}
-          name="date"
-        />
-        <Form.Input
-          placeholder="Category"
-          value={activity?.category}
           onChange={handleInputChange}
           name="category"
+          placeholder="Category"
+          value={activity.category}
         />
         <Form.Input
-          placeholder="City"
-          value={activity?.city}
+          onChange={handleInputChange}
+          name="date"
+          type="datetime-local"
+          placeholder="Date"
+          value={activity.date}
+        />
+        <Form.Input
           onChange={handleInputChange}
           name="city"
+          placeholder="City"
+          value={activity.city}
         />
         <Form.Input
-          placeholder="Venue"
-          value={activity?.venue}
           onChange={handleInputChange}
           name="venue"
+          placeholder="Venue"
+          value={activity.venue}
         />
-        <Button loading ={submitting} content="Submit" type="submit" positive floated="right" />
         <Button
-          onClick={() => setEditMode(false)}
-          content="Cancel"
-          type="submit"
+          loading={submitting}
           floated="right"
+          positive
+          type="submit"
+          content="Submit"
+        />
+        <Button
+          onClick={()=>history.push('/activities')}
+          floated="right"
+          type="button"
+          content="Cancel"
         />
       </Form>
     </Segment>
   );
 };
+
+export default observer(ActivityForm);
