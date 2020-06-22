@@ -1,7 +1,18 @@
 import axios, { AxiosResponse } from 'axios'
 import { IActivity } from '../models/activity';
 
+
 axios.defaults.baseURL = 'http://localhost:5000/api';
+
+// axios.interceptors.response.use(undefined, error => {
+//     const {status, data, config} = error;
+//    if(status === 404){
+//        history.push('/notfound')
+//    }
+//    if(status === '5000'){
+//        toast.error("Server error");
+//    }
+// })
 
 const responseBody = (response:AxiosResponse)=> response.data
 

@@ -24,11 +24,16 @@ const ActivityDetails: React.FC<RouteComponentProps<DetailsParams>> = ({
   } = activityStore;
 
   useEffect(() => {
-    loadActivity(match.params.id);
-  }, [loadActivity, match.params.id]);
-
-  if (loadingInitial || !activity)
+    loadActivity(match.params.id).catch(()=>{
+      history.push('/notfound')
+    });
+  }, [loadActivity, match.params.id, history]);
+  
+  if (loadingInitial)
     return <LoadingComponent content="Loading activity..." />;
+    if(!activity){
+      return <h1>Not Found</h1>
+    }
   return (
     <Grid>
     <Grid.Column width ={10}>

@@ -3,6 +3,7 @@ import { createContext, SyntheticEvent } from "react";
 import { IActivity } from "../models/activity";
 import agent from "../api/agent";
 import { runInContext } from "vm";
+import {toast} from "react-toastify";
 
 
 configure({ enforceActions: "always" });
@@ -60,16 +61,17 @@ groupActivitiesByDate(activities:IActivity[]){
       this.loadingInitial = true;
       try {
         activity = await agent.Activities.details(id);
-        runInAction('setting activity', ()=>{
+        runInAction('getting activity', ()=>{
           this.activity = activity;
           this.loadingInitial = false;
         })
       } catch (error) {
-        runInContext('activity error', ()=>{
+        if(error.status === 5000){
+          toast.error("There was a server error")
+        }
+        runInContext('activity error',  ()=>{
           this.loadingInitial = false;
         })
-        console.log(error);
-        
       }
     }
   };
@@ -95,7 +97,8 @@ groupActivitiesByDate(activities:IActivity[]){
       runInAction("create activity error", () => {
         this.submitting = false;
       });
-      console.log(error);
+      throw error
+      
     }
   };
 
